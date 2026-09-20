@@ -18,6 +18,16 @@ print(df.attrs["units"])               # 字段单位口径
 - 自动分页与限速友好(429 / Retry-After 自动处理)
 - 点时财务(PIT):`as_of` 参数强制显式,杜绝前视
 
+## 本地派生周/月线(配额最优实践)
+```python
+import stockroute
+df = sr.kline("600519")                # 拉 1 次日线
+wk = stockroute.to_weekly(df)          # 周/月线本地派生,零额外配额
+mo = stockroute.to_monthly(df)
+```
+聚合按实际交易日分桶:节假日/临时休市天然免疫,bar 日期=期内最后交易日,涨跌幅由聚合后 close 链重算。
+临时看一眼也可用服务端:`sr.kline("600519", ktype="w")`。
+
 ## 文档
 接口文档站:https://m-stock.600044.xyz
 

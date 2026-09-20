@@ -9,9 +9,11 @@
 """
 
 from .client import StockRoute
+from .resample import to_monthly, to_period_bars, to_weekly
 from .exceptions import (AuthError, NotFoundError, QuotaError, RateLimited,
                          ServerError, StockRouteError, TierError)
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __all__ = ["StockRoute", "StockRouteError", "AuthError", "TierError",
-           "QuotaError", "RateLimited", "NotFoundError", "ServerError"]
+           "QuotaError", "RateLimited", "NotFoundError", "ServerError",
+           "to_weekly", "to_monthly", "to_period_bars"]
