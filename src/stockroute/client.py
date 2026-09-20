@@ -82,10 +82,14 @@ class StockRoute:
         return df
 
     # ── 数据端点 ──
-    def kline(self, code: str, start: str = None, end: str = None) -> pd.DataFrame:
-        """个股日 K(OHLCV/涨跌幅/复权/ST/估值尾列)。
-        历史深度按档位:免费3年 / 基础5年 / 标准及以上全历史。"""
-        p = self._get("/api/kline", _clean(code=code, start=start, end=end))
+    def kline(self, code: str, start: str = None, end: str = None,
+              ktype: str = None, limit: int = None) -> pd.DataFrame:
+        """个股 K 线(OHLCV/涨跌幅/复权/ST/估值尾列)。
+        历史深度按档位:免费3年 / 基础5年 / 标准及以上全历史。
+        ktype: d=日线(默认)/ w=周线 / m=月线(服务端由日线聚合)。
+        limit: 只返回最近 N 根。"""
+        p = self._get("/api/kline", _clean(code=code, start=start, end=end,
+                                           ktype=ktype, limit=limit))
         return self._to_df(p)
 
     def financial(self, code: str, kind: str, as_of: str) -> pd.DataFrame:

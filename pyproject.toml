@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stockroute"
-version = "0.1.0"
+version = "0.1.1"
 description = "StockRoute 数据 API 官方 Python SDK(A 股行情/财务/资讯,DataFrame-first,PIT 点时财务)"
 readme = "README.md"
 requires-python = ">=3.9"

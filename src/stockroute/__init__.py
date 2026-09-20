@@ -12,6 +12,6 @@ from .client import StockRoute
 from .exceptions import (AuthError, NotFoundError, QuotaError, RateLimited,
                          ServerError, StockRouteError, TierError)
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = ["StockRoute", "StockRouteError", "AuthError", "TierError",
            "QuotaError", "RateLimited", "NotFoundError", "ServerError"]
