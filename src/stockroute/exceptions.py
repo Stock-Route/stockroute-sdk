@@ -9,6 +9,11 @@ class AuthError(StockRouteError):
     """401:Token 缺失/无效/已吊销。到门户「Token」页重签。"""
 
 
+class ParamError(StockRouteError):
+    """400/422:参数格式或取值非法(code 非法、缺必填、limit 超档位上限等)。
+    按异常信息内的合法形态修正后重试。2026-10-01 v0.2.0 新增。"""
+
+
 class TierError(StockRouteError):
     """403:当前档位不足以访问该数据集。
 

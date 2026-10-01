@@ -5,8 +5,8 @@ import time
 import pandas as pd
 import requests
 
-from .exceptions import (AuthError, NotFoundError, QuotaError, RateLimited,
-                         ServerError, TierError)
+from .exceptions import (AuthError, NotFoundError, ParamError, QuotaError,
+                         RateLimited, ServerError, TierError)
 
 DEFAULT_BASE = "https://api-stock.600044.xyz"
 
@@ -57,19 +57,31 @@ class StockRoute:
         if r.status_code == 200:
             return r.json()
         detail = _parse_detail_body(r)
-        if r.status_code == 401:
+        # 2026-10-01 v0.2.0:错误分派改按信封 error 码(稳定契约),message 子串匹配
+        # 对服务端文案变更零韧性(9/29 档位制后 TierError 判定串失效全落 ServerError,
+        # 公网实测实锤);error 码缺失时回落 HTTP 状态码
+        try:
+            code = str((r.json() or {}).get("error") or "")
+        except Exception:
+            code = ""
+        if code in ("AUTH_REQUIRED", "TOKEN_INVALID") or r.status_code == 401:
             raise AuthError(detail)
-        if r.status_code == 403 and "tier below min_points" in detail:
+        if code in ("TIER_TOO_LOW", "GRANT_REQUIRED") or (r.status_code == 403 and not code):
             have, need = _extract_have_need(detail)
-            raise TierError(f"档位不足:需 {need} 分,当前 {have} 分。到门户「充值」页升级",
-                            have=have, need=need)
-        if r.status_code == 403 and "exceeded" in detail:
+            msg = (f"档位不足:当前 {have} 分,需 {need} 分" if have and need
+                   else detail) + "。到门户「充值」页升级档位"
+            raise TierError(msg, have=have, need=need)
+        if code in ("MONTH_POINTS_EXCEEDED", "DAILY_POINTS_EXCEEDED", "MONTH_QUOTA_EXCEEDED",
+                    "MONTH_ROWS_EXCEEDED", "DAILY_ROWS_EXCEEDED", "IP_POOL_FULL"):
             raise QuotaError(detail)
-        if r.status_code == 429:
+        if code == "RATE_LIMITED" or r.status_code == 429:
             raise RateLimited(detail, retry_after=int(r.headers.get("Retry-After", "60")))
-        if r.status_code == 404:
+        if code in ("PARAM_INVALID", "PIT_REQUIRED") or r.status_code in (400, 422):
+            raise ParamError(detail)
+        if code in ("NO_DATA", "NOT_FOUND", "NOT_QUERYABLE", "UNKNOWN_DATASET") \
+                or r.status_code == 404:
             raise NotFoundError(detail)
-        raise ServerError(f"HTTP {r.status_code}: {detail}", status=r.status_code)
+        raise ServerError(f"HTTP {r.status_code} {code}: {detail}", status=r.status_code)
 
     @staticmethod
     def _to_df(payload: dict) -> pd.DataFrame:
